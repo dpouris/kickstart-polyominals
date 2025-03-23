@@ -23,7 +23,7 @@ The solution approaches the problem by:
   ```
 - Run the solution:
   ```bash
-  ./target/release/polyominals < pol.in > result.txt && diff result.txt pol.out
+  ./target/release/polyominals < pol.in > res.txt && diff res.txt pol.out; rm res.txt
   ```
 
 ## References

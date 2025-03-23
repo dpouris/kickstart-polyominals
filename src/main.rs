@@ -46,8 +46,8 @@ fn get_cases(buf: &str) -> Vec<Case> {
     let mut offset = 0;
     for c_idx in 0..n {
         let dimensions = input[c_idx + offset].split_once(' ').unwrap();
-        let rows = dimensions.0.parse::<usize>().unwrap();
-        let cols = dimensions.1.parse::<usize>().unwrap();
+        let rows = dimensions.0.parse().unwrap();
+        let cols = dimensions.1.parse().unwrap();
         let mut wall = input[c_idx + offset + 1..c_idx + offset + 1 + rows].to_vec();
         wall.reverse();
         cases.push(Case { wall, cols, rows });
