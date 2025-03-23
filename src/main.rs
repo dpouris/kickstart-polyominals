@@ -63,8 +63,7 @@ fn run_case(idx: usize, case: Case) {
         .iter()
         .flat_map(|letters| letters.chars())
         .collect::<HashSet<char>>();
-    let order: Vec<char> =
-        compute_build_order(&case.wall, &unique_letters, &vec![], case.rows, case.cols);
+    let order: Vec<char> = compute_build_order(&case, &unique_letters, &vec![]);
     let order = match order.len() {
         n if n < unique_letters.len() || n == 0 => "-1".to_string(),
         _ => order.iter().collect(),
@@ -73,11 +72,9 @@ fn run_case(idx: usize, case: Case) {
 }
 
 fn compute_build_order(
-    wall: &[&str],
+    case: &Case,
     unique_letters: &HashSet<char>,
     order: &Vec<char>,
-    rows: usize,
-    cols: usize,
 ) -> Vec<char> {
     let letters = unique_letters
         .iter()
@@ -90,11 +87,11 @@ fn compute_build_order(
 
     let mut pushed = false;
     'letter_loop: for letter in letters {
-        for row in 1..rows {
-            for col in 0..cols {
-                // println!("row: {} -> {}", row, wall[row]); // debugging
-                if wall[row].chars().nth(col).unwrap() == *letter {
-                    let chr = wall[row - 1].chars().nth(col).unwrap();
+        for row in 1..case.rows {
+            for col in 0..case.cols {
+                // println!("row: {} -> {}", row, case.wall[row]); // debugging
+                if case.wall[row].chars().nth(col).unwrap() == *letter {
+                    let chr = case.wall[row - 1].chars().nth(col).unwrap();
                     if _order.contains(&chr) || chr == *letter {
                         continue;
                     } else {
@@ -112,5 +109,5 @@ fn compute_build_order(
         return _order;
     }
 
-    compute_build_order(wall, unique_letters, &_order, rows, cols)
+    compute_build_order(case, unique_letters, &_order)
 }
