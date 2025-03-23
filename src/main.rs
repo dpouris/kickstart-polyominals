@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::{
-    io::{self, BufRead, IsTerminal},
+    io::{self, BufRead},
     process::exit,
 };
 
@@ -10,34 +10,51 @@ struct Case<'c> {
     rows: usize,
 }
 
+const CHUCK_SIZE: usize = size_of::<char>() * 100;
+
 fn main() {
-    let mut buf = String::with_capacity(size_of::<char>() * 100);
+    let mut buf = String::with_capacity(CHUCK_SIZE);
     read_stdin(&mut buf);
     for (idx, case) in get_cases(&buf).iter().enumerate() {
         run_case(idx, &case.wall, case.rows, case.cols);
     }
 }
 
+fn read_stdin(buf: &mut String) {
+    let stdin = io::stdin();
+    loop {
+        let Ok(n) = stdin
+            .lock()
+            .read_line(buf)
+            .map_err(|err| println!("err: {err}"))
+        else {
+            exit(1)
+        };
+
+        if n != 0 {
+            break; // EOF, break
+        };
+        buf.reserve(n); // more content, reserve
+    }
+}
+
 fn get_cases(buf: &str) -> Vec<Case> {
-    let mut cases_vec = vec![];
-    let (n, cases) = buf.split_once('\n').unwrap();
+    let mut cases = vec![];
+    let (n, rest) = buf.split_once('\n').unwrap();
     let n = n.parse().unwrap();
-    let cases = cases.split('\n').collect::<Vec<&str>>();
+    let input = rest.split('\n').collect::<Vec<&str>>();
     let mut offset = 0;
     for c_idx in 0..n {
-        let size = cases[c_idx + offset].split_once(' ').unwrap();
-        let r = size.0.parse::<usize>().unwrap();
-        let c = size.1.parse::<usize>().unwrap();
-        let mut wall = cases[c_idx + offset + 1..c_idx + offset + 1 + r].to_vec();
+        let dimensions = input[c_idx + offset].split_once(' ').unwrap();
+        let rows = dimensions.0.parse::<usize>().unwrap();
+        let cols = dimensions.1.parse::<usize>().unwrap();
+        let mut wall = input[c_idx + offset + 1..c_idx + offset + 1 + rows].to_vec();
         wall.reverse();
-        offset += r;
-        cases_vec.push(Case {
-            wall,
-            cols: c,
-            rows: r,
-        });
+        cases.push(Case { wall, cols, rows });
+
+        offset += rows;
     }
-    cases_vec
+    cases
 }
 
 fn run_case(idx: usize, wall: &[&str], rows: usize, cols: usize) {
@@ -64,12 +81,9 @@ fn compute_build_order(wall: &[&str], order: &Vec<char>, rows: usize, cols: usiz
 
     let mut pushed = false;
     'letter_loop: for letter in letters {
-        'row_loop: for row in 1..rows {
+        for row in 1..rows {
             for col in 0..cols {
                 // println!("row: {} -> {}", row, wall[row]); // debugging
-                if row == 0 {
-                    continue 'row_loop;
-                }
                 if wall[row].chars().nth(col).unwrap() == letter {
                     let chr = wall[row - 1].chars().nth(col).unwrap();
                     if _order.contains(&chr) || chr == letter {
@@ -90,23 +104,4 @@ fn compute_build_order(wall: &[&str], order: &Vec<char>, rows: usize, cols: usiz
     }
 
     compute_build_order(wall, &_order, rows, cols)
-}
-
-fn read_stdin(buf: &mut String) {
-    let stdin = io::stdin();
-    loop {
-        let Ok(n) = stdin
-            .lock()
-            .read_line(buf)
-            .map_err(|err| println!("err: {err}"))
-        else {
-            exit(1)
-        };
-
-        if stdin.is_terminal() || n == 0 {
-            // no input file or EOF, break
-            break;
-        };
-        buf.reserve(n); // more content, reserve
-    }
 }
