@@ -15,8 +15,8 @@ const CHUCK_SIZE: usize = size_of::<char>() * 100;
 fn main() {
     let mut buf = String::with_capacity(CHUCK_SIZE);
     read_stdin(&mut buf);
-    for (idx, case) in get_cases(&buf).iter().enumerate() {
-        run_case(idx, &case.wall, case.rows, case.cols);
+    for (idx, case) in get_cases(&buf).into_iter().enumerate() {
+        run_case(idx, case);
     }
 }
 
@@ -31,7 +31,7 @@ fn read_stdin(buf: &mut String) {
             exit(1)
         };
 
-        if n != 0 {
+        if n == 0 {
             break; // EOF, break
         };
         buf.reserve(n); // more content, reserve
@@ -57,23 +57,32 @@ fn get_cases(buf: &str) -> Vec<Case> {
     cases
 }
 
-fn run_case(idx: usize, wall: &[&str], rows: usize, cols: usize) {
-    let order: Vec<char> = compute_build_order(wall, &vec![], rows, cols);
+fn run_case(idx: usize, case: Case) {
+    let unique_letters = case
+        .wall
+        .iter()
+        .flat_map(|letters| letters.chars())
+        .collect::<HashSet<char>>();
+    let order: Vec<char> =
+        compute_build_order(&case.wall, &unique_letters, &vec![], case.rows, case.cols);
     let order = match order.len() {
-        0 => "-1".to_string(),
+        n if n < unique_letters.len() || n == 0 => "-1".to_string(),
         _ => order.iter().collect(),
     };
     println!("Case #{idx}: {order}", idx = idx + 1);
 }
 
-fn compute_build_order(wall: &[&str], order: &Vec<char>, rows: usize, cols: usize) -> Vec<char> {
-    let letters = wall
+fn compute_build_order(
+    wall: &[&str],
+    unique_letters: &HashSet<char>,
+    order: &Vec<char>,
+    rows: usize,
+    cols: usize,
+) -> Vec<char> {
+    let letters = unique_letters
         .iter()
-        .flat_map(|letters| letters.chars())
-        .collect::<HashSet<char>>()
-        .into_iter()
         .filter(|el| !order.contains(el))
-        .collect::<Vec<char>>();
+        .collect::<Vec<&char>>();
     let mut _order = order.clone();
     if letters.is_empty() {
         return order.clone();
@@ -84,9 +93,9 @@ fn compute_build_order(wall: &[&str], order: &Vec<char>, rows: usize, cols: usiz
         for row in 1..rows {
             for col in 0..cols {
                 // println!("row: {} -> {}", row, wall[row]); // debugging
-                if wall[row].chars().nth(col).unwrap() == letter {
+                if wall[row].chars().nth(col).unwrap() == *letter {
                     let chr = wall[row - 1].chars().nth(col).unwrap();
-                    if _order.contains(&chr) || chr == letter {
+                    if _order.contains(&chr) || chr == *letter {
                         continue;
                     } else {
                         continue 'letter_loop;
@@ -95,7 +104,7 @@ fn compute_build_order(wall: &[&str], order: &Vec<char>, rows: usize, cols: usiz
             }
         }
         pushed = true;
-        _order.push(letter);
+        _order.push(*letter);
         break;
     }
 
@@ -103,5 +112,5 @@ fn compute_build_order(wall: &[&str], order: &Vec<char>, rows: usize, cols: usiz
         return _order;
     }
 
-    compute_build_order(wall, &_order, rows, cols)
+    compute_build_order(wall, unique_letters, &_order, rows, cols)
 }
