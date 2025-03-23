@@ -82,10 +82,9 @@ fn compute_build_order(
         .collect::<Vec<&char>>();
     let mut _order = order.clone();
     if letters.is_empty() {
-        return order.clone();
+        return _order;
     }
 
-    let mut pushed = false;
     'letter_loop: for letter in letters {
         for row in 1..case.rows {
             for col in 0..case.cols {
@@ -100,12 +99,11 @@ fn compute_build_order(
                 }
             }
         }
-        pushed = true;
         _order.push(*letter);
         break;
     }
 
-    if !pushed {
+    if _order.len() == order.len() {
         return _order;
     }
 
