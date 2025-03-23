@@ -65,8 +65,8 @@ fn run_case(idx: usize, case: Case) {
         .collect::<HashSet<char>>();
     let order: Vec<char> = compute_build_order(&case, &unique_letters, &vec![]);
     let order = match order.len() {
-        n if n < unique_letters.len() || n == 0 => "-1".to_string(),
-        _ => order.iter().collect(),
+        n if n == unique_letters.len() => order.iter().collect(),
+        _ => "-1".to_string(),
     };
     println!("Case #{idx}: {order}", idx = idx + 1);
 }
